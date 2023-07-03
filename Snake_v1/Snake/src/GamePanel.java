@@ -113,37 +113,37 @@ public final class GamePanel extends JPanel implements ActionListener {
         }
 
         switch (direction) {
-            case 'U':
+            case 'U' -> {
                 if (Y[0] > UNIT_SIZE) {
                     Y[0] = Y[0] - UNIT_SIZE;
                 } else {
                     running = false; // Đụng vào tường trên, kết thúc trò chơi
                 }
-                break;
+            }
 
-            case 'D':
+            case 'D' -> {
                 if (Y[0] < SCREEN_HEIGHT - UNIT_SIZE * 2) {
                     Y[0] = Y[0] + UNIT_SIZE;
                 } else {
                     running = false; // Đụng vào tường dưới, kết thúc trò chơi
                 }
-                break;
+            }
 
-            case 'L':
+            case 'L' -> {
                 if (X[0] > UNIT_SIZE) {
                     X[0] = X[0] - UNIT_SIZE;
                 } else {
                     running = false; // Đụng vào tường trái, kết thúc trò chơi
                 }
-                break;
+            }
 
-            case 'R':
+            case 'R' -> {
                 if (X[0] < SCREEN_WIDTH - UNIT_SIZE * 2) {
                     X[0] = X[0] + UNIT_SIZE;
                 } else {
                     running = false; // Đụng vào tường phải, kết thúc trò chơi
                 }
-                break;
+            }
         }
     }
 
@@ -199,7 +199,6 @@ public final class GamePanel extends JPanel implements ActionListener {
         if (!running) {
             timer.stop();
         }
-
     }
 
     public void gameOver(Graphics g) {
@@ -249,8 +248,6 @@ public final class GamePanel extends JPanel implements ActionListener {
                     }
                 }
             }
-
         }
     }
-
 }

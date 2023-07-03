@@ -1,7 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class StartMenu {
     private JFrame frame;
@@ -19,24 +18,18 @@ public class StartMenu {
         settingsButton = new JButton("Cài đặt");
         exitButton = new JButton("Thoát game");
 
-        playButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                frame.dispose();
-                GamePanel gamePanel = new GamePanel();
-                gamePanel.startGame();
-            }
+        playButton.addActionListener((ActionEvent e) -> {
+            frame.dispose();
+            GamePanel gamePanel = new GamePanel();
+            gamePanel.startGame();
         });
 
-        settingsButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                showSettings();
-            }
+        settingsButton.addActionListener((ActionEvent e) -> {
+            showSettings();
         });
 
-        exitButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                System.exit(0);
-            }
+        exitButton.addActionListener((ActionEvent e) -> {
+            System.exit(0);
         });
 
         frame.add(playButton);
@@ -51,10 +44,8 @@ public class StartMenu {
     }
 
     public static void main(String[] args) {
-    SwingUtilities.invokeLater(new Runnable() {
-        public void run() {
-            StartMenu startMenu = new StartMenu();
-        }
+    SwingUtilities.invokeLater(() -> {
+        StartMenu startMenu = new StartMenu();
     });
 }
 
