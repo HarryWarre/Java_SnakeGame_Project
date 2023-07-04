@@ -1,3 +1,7 @@
+
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
+
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
@@ -10,7 +14,16 @@
 public class SnakeGame {
     public static void main(String[] args) {
         // TODO code application logic here
-        new GameFrame();
+        SwingUtilities.invokeLater(() -> {
+            Menu menu = new Menu();
+            
+            JFrame frame = new JFrame("Snake Game");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setSize(600, 600);
+            frame.setLocationRelativeTo(null);
+            frame.add(menu);
+            frame.setVisible(true);
+        });
     }
     
 }
