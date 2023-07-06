@@ -19,7 +19,7 @@ public class SnakeGame {
             
             JFrame frame = new JFrame("Snake Game");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(600, 600);
+            frame.setSize(610, 630);
             frame.setLocationRelativeTo(null);
             frame.add(menu);
             frame.setVisible(true);

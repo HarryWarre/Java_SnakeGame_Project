@@ -13,11 +13,12 @@ import java.awt.event.ActionEvent;
 
 public class Menu extends JPanel{
     private final JButton btn_start;
+    private GamePanel gamePanel;
     public Menu(){
+        //Bắt đầu chơi
         setLayout(new BorderLayout());
-
         btn_start = new JButton("Bắt đầu chơi");
-        btn_start.setFont(new Font("Arial", Font.BOLD, 16));
+        btn_start.setFont(new Font("Arial", Font.BOLD, 32));
         btn_start.setForeground(Color.WHITE);
         btn_start.setBackground(new Color(30, 39, 46)); // Màu nền dark theme
         btn_start.setOpaque(true);
@@ -26,8 +27,19 @@ public class Menu extends JPanel{
         btn_start.setFocusPainted(false); // Loại bỏ hiệu ứng focus
         btn_start.addActionListener((ActionEvent e) -> {
             // Thực hiện hành động khi nút "Bắt đầu chơi" được nhấn
-            new GameFrame();
+            startGame();
         });
         add(btn_start, BorderLayout.CENTER);
+        
+         setVisible(true);
     }
+     private void startGame() {
+        removeAll(); // Xóa nút "Bắt đầu chơi" khỏi panel
+        setLayout(new BorderLayout());
+        gamePanel = new GamePanel();
+        add(gamePanel, BorderLayout.CENTER);
+        revalidate(); // Cập nhật layout
+        //gamePanel.startGame(); // Bắt đầu trò chơi       
+        gamePanel.registerKeyListener();
+    }    
 }

@@ -18,6 +18,8 @@ public class GameFrame extends JFrame{
         this.setResizable(false);
         this.pack();
         this.setVisible(true);
-        this.setLocationRelativeTo(null);    
+        this.setLocationRelativeTo(null);  
+        Menu menu = new Menu();
+        this.add(menu);
     }
 }

@@ -1,11 +1,7 @@
-
 import java.awt.*;
 import java.awt.event.*;
-import java.util.HashSet;
 import javax.swing.*;
 import java.util.Random;
-import java.util.Set;
-
 import javax.swing.JPanel;
 
 public final class GamePanel extends JPanel implements ActionListener {
@@ -14,11 +10,11 @@ public final class GamePanel extends JPanel implements ActionListener {
     static final int SCREEN_HEIGHT = 600;
     static final int UNIT_SIZE = 30;
     static final int GAME_UNITS = (SCREEN_WIDTH * SCREEN_HEIGHT) / UNIT_SIZE;
-    static int DELAY = 150;//speed
+    int DELAY = 160;//speed
 
     final int X[] = new int[GAME_UNITS];
     final int Y[] = new int[GAME_UNITS];
-    int bodyParts = 6;
+    int bodyParts = 3;
     int applesEaten;
     int appleX;
     int appleY;
@@ -27,14 +23,17 @@ public final class GamePanel extends JPanel implements ActionListener {
     Timer timer;
     Random random;
     int wallSize = UNIT_SIZE;
+    private MyKeyAdapter keyAdapter;
 
     GamePanel() {
         random = new Random();
         this.setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
         this.setBackground(Color.black);
         this.setFocusable(true);
+        keyAdapter = new MyKeyAdapter();
         this.addKeyListener(new MyKeyAdapter());
         startGame();
+       
     }
 
     public void startGame() {
@@ -42,9 +41,8 @@ public final class GamePanel extends JPanel implements ActionListener {
         running = true;
         timer = new Timer(DELAY, this);
         timer.start();
-        X[0] =  UNIT_SIZE;
-        Y[0] =  UNIT_SIZE;
-
+        X[0] = UNIT_SIZE;
+        Y[0] = UNIT_SIZE;
     }
 
     @Override
@@ -54,56 +52,55 @@ public final class GamePanel extends JPanel implements ActionListener {
     }
 
     public void draw(Graphics g) {
-    if (running) {
-        // Vẽ ma trận
-        for (int i = 0; i < SCREEN_HEIGHT / UNIT_SIZE; i++) {
-            g.drawLine(i * UNIT_SIZE, 0, i * UNIT_SIZE, SCREEN_HEIGHT);
-            g.drawLine(0, i * UNIT_SIZE, SCREEN_WIDTH, i * UNIT_SIZE);
-        }
-
-        g.setColor(Color.RED);
-        g.fillOval(appleX, appleY, UNIT_SIZE, UNIT_SIZE);
-
-        for (int i = 0; i < bodyParts; i++) {
-            if (i == 0) {
-                g.setColor(Color.GREEN);
-                g.fillRect(X[i], Y[i], UNIT_SIZE, UNIT_SIZE);
-            } else {
-                g.setColor(Color.BLUE);
-                g.fillRect(X[i], Y[i], UNIT_SIZE, UNIT_SIZE);
+        if (running) {
+            // Vẽ ma trận
+            for (int i = 0; i < SCREEN_HEIGHT / UNIT_SIZE; i++) {
+                g.drawLine(i * UNIT_SIZE, 0, i * UNIT_SIZE, SCREEN_HEIGHT);
+                g.drawLine(0, i * UNIT_SIZE, SCREEN_WIDTH, i * UNIT_SIZE);
             }
+
+            g.setColor(Color.RED);
+            g.fillOval(appleX, appleY, UNIT_SIZE, UNIT_SIZE);
+
+            for (int i = 0; i < bodyParts; i++) {
+                if (i == 0) {
+                    g.setColor(Color.GREEN);
+                    g.fillRect(X[i], Y[i], UNIT_SIZE, UNIT_SIZE);
+                } else {
+                    g.setColor(Color.BLUE);
+                    g.fillRect(X[i], Y[i], UNIT_SIZE, UNIT_SIZE);
+                }
+            }
+
+            // Vẽ tường
+            g.setColor(Color.GRAY);
+            g.fillRect(0, 0, SCREEN_WIDTH, wallSize); // Tường trên
+            g.fillRect(0, SCREEN_HEIGHT - wallSize, SCREEN_WIDTH, wallSize); // Tường dưới
+            g.fillRect(0, wallSize, wallSize, SCREEN_HEIGHT - 2 * wallSize); // Tường trái
+            g.fillRect(SCREEN_WIDTH - wallSize, wallSize, wallSize, SCREEN_HEIGHT - 2 * wallSize); // Tường phải
+
+            g.setColor(Color.RED);
+            g.setFont(new Font("Ink Free", Font.BOLD, 30));
+            FontMetrics metrics = getFontMetrics(getFont());
+            g.drawString("Score: " + applesEaten, (SCREEN_WIDTH - metrics.stringWidth("Score: " + applesEaten)) / 2, g.getFont().getSize());
+        } else {
+            gameOver(g);
         }
-
-        // Vẽ tường
-        g.setColor(Color.GRAY);
-        g.fillRect(0, 0, SCREEN_WIDTH, wallSize); // Tường trên
-        g.fillRect(0, SCREEN_HEIGHT - wallSize, SCREEN_WIDTH, wallSize); // Tường dưới
-        g.fillRect(0, wallSize, wallSize, SCREEN_HEIGHT - 2 * wallSize); // Tường trái
-        g.fillRect(SCREEN_WIDTH - wallSize, wallSize, wallSize, SCREEN_HEIGHT - 2 * wallSize); // Tường phải
-
-        g.setColor(Color.RED);
-        g.setFont(new Font("Ink Free", Font.BOLD, 30));
-        FontMetrics metrics = getFontMetrics(getFont());
-        g.drawString("Score: " + applesEaten, (SCREEN_WIDTH - metrics.stringWidth("Score: " + applesEaten)) / 2, g.getFont().getSize());
-    } else {
-        gameOver(g);
     }
-}
-
 
     public void newApple() {
-    boolean appleInWall = true;
-    while (appleInWall) {
-        appleX = random.nextInt((int) (SCREEN_WIDTH / UNIT_SIZE - 2)) * UNIT_SIZE + UNIT_SIZE;
-        appleY = random.nextInt((int) (SCREEN_HEIGHT / UNIT_SIZE - 2)) * UNIT_SIZE + UNIT_SIZE;
+        boolean appleInWall = true;
+        while (appleInWall) {
+            appleX = random.nextInt((int) (SCREEN_WIDTH / UNIT_SIZE - 2)) * UNIT_SIZE + UNIT_SIZE;
+            appleY = random.nextInt((int) (SCREEN_HEIGHT / UNIT_SIZE - 2)) * UNIT_SIZE + UNIT_SIZE;
 
-        // Kiểm tra xem táo có trùng với vị trí của tường không
-        if (appleX >= wallSize && appleX < SCREEN_WIDTH - wallSize &&
-            appleY >= wallSize && appleY < SCREEN_HEIGHT - wallSize) {
-            appleInWall = false;
+            // Kiểm tra xem táo có trùng với vị trí của tường không
+            if (appleX >= wallSize && appleX < SCREEN_WIDTH - wallSize
+                    && appleY >= wallSize && appleY < SCREEN_HEIGHT - wallSize) {
+                appleInWall = false;
+            }
         }
     }
-}
 
     //di chuyển
     public void move() {
@@ -147,6 +144,12 @@ public final class GamePanel extends JPanel implements ActionListener {
         }
     }
 
+    public void registerKeyListener() {
+        setFocusable(true);
+        requestFocus();
+        addKeyListener(keyAdapter);
+    }
+
     //check ăn táo
     public void checkApple() {
         if (X[0] == appleX && Y[0] == appleY) {
@@ -158,9 +161,9 @@ public final class GamePanel extends JPanel implements ActionListener {
     }
 
     private void increaseSpeed() {
-        if (applesEaten % 5 == 0 && DELAY > 10) {
+        if (applesEaten % 5 == 0 && DELAY > 15) {
             // Tăng tốc độ sau khi ăn đủ số lượng thức ăn được xác định
-            if (DELAY >= 10) {
+            if (DELAY >= 15) {
                 DELAY -= 15; // Giảm thời gian delay để tăng tốc độ
             }
             timer.setDelay(DELAY); // Cập nhật tốc độ của timer
@@ -207,6 +210,13 @@ public final class GamePanel extends JPanel implements ActionListener {
         FontMetrics metrics = getFontMetrics(getFont());
         g.drawString("Thua rùi :((", (SCREEN_WIDTH - metrics.stringWidth("Thua rùi")) / 3, SCREEN_HEIGHT / 2);
         g.drawString("Score: " + applesEaten, (SCREEN_WIDTH - metrics.stringWidth("Score: " + applesEaten)) / 3, g.getFont().getSize());
+        
+        //restart
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Ink Free", Font.ITALIC, 30));
+        FontMetrics metrics1 = getFontMetrics(getFont());
+        g.drawString("Nhan SPACE de choi lai ", (SCREEN_WIDTH - metrics1.stringWidth("Nhan SPACE de choi lai")) -300, SCREEN_HEIGHT -100);
+        
     }
 
     @Override
@@ -218,11 +228,30 @@ public final class GamePanel extends JPanel implements ActionListener {
         }
         repaint();
     }
+    
+        
 
     public class MyKeyAdapter extends KeyAdapter {
 
         @Override
         public void keyPressed(KeyEvent e) {
+            if(e.getKeyCode()==KeyEvent.VK_SPACE){
+                if(running==false){
+                    applesEaten=0;
+                    bodyParts=3;
+                    DELAY=160;
+                    direction = 'R';
+                    newApple();
+                    running = true;
+                    timer.start();
+                    X[0] = UNIT_SIZE;
+                    Y[0] = UNIT_SIZE;
+                   
+                }
+                
+                   
+        }
+            
             switch (e.getKeyCode()) {
                 case KeyEvent.VK_LEFT -> {
                     if (direction != 'R') {
