@@ -8,7 +8,7 @@ import javax.swing.SwingUtilities;
  */
 
 /**
- *
+ * 
  * @author FPT-ACER
  */
 public class SnakeGame {

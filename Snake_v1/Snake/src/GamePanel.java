@@ -1,8 +1,14 @@
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.Objects;
 import javax.swing.*;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import javax.swing.JPanel;
+import org.json.simple.parser.ParseException;
 
 public final class GamePanel extends JPanel implements ActionListener {
 
@@ -20,10 +26,17 @@ public final class GamePanel extends JPanel implements ActionListener {
     int appleY;
     char direction = 'R';
     boolean running = false;
+    
     Timer timer;
     Random random;
     int wallSize = UNIT_SIZE;
     private MyKeyAdapter keyAdapter;
+    
+    boolean resetFlag = false;
+    private boolean moving = false;
+    
+    private Apple apple;
+    private java.util.List<Point> apples;
 
     GamePanel() {
         random = new Random();
@@ -33,25 +46,31 @@ public final class GamePanel extends JPanel implements ActionListener {
         keyAdapter = new MyKeyAdapter();
         this.addKeyListener(new MyKeyAdapter());
         startGame();
-       
     }
 
     public void startGame() {
-        newApple();
+        apples = new ArrayList<>();
         running = true;
         timer = new Timer(DELAY, this);
         timer.start();
         X[0] = UNIT_SIZE;
         Y[0] = UNIT_SIZE;
+        resetSnake();
+        newApple();
+        System.out.println("START GAME:"+ DELAY);
     }
 
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        draw(g);
+        try {
+            draw(g);
+        } catch (ParseException ex) {
+            Logger.getLogger(GamePanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
-    public void draw(Graphics g) {
+    public void draw(Graphics g) throws ParseException {
         if (running) {
             // Vẽ ma trận
             for (int i = 0; i < SCREEN_HEIGHT / UNIT_SIZE; i++) {
@@ -60,7 +79,11 @@ public final class GamePanel extends JPanel implements ActionListener {
             }
 
             g.setColor(Color.RED);
-            g.fillOval(appleX, appleY, UNIT_SIZE, UNIT_SIZE);
+            for (Point _apple : apples) {
+                //g.fillOval(_apple.x, _apple.y, UNIT_SIZE, UNIT_SIZE);
+                apple = new Apple(_apple.x, _apple.y,  UNIT_SIZE);
+                apple.draw(g);
+            }
 
             for (int i = 0; i < bodyParts; i++) {
                 if (i == 0) {
@@ -90,14 +113,21 @@ public final class GamePanel extends JPanel implements ActionListener {
 
     public void newApple() {
         boolean appleInWall = true;
-        while (appleInWall) {
-            appleX = random.nextInt((int) (SCREEN_WIDTH / UNIT_SIZE - 2)) * UNIT_SIZE + UNIT_SIZE;
-            appleY = random.nextInt((int) (SCREEN_HEIGHT / UNIT_SIZE - 2)) * UNIT_SIZE + UNIT_SIZE;
-
-            // Kiểm tra xem táo có trùng với vị trí của tường không
-            if (appleX >= wallSize && appleX < SCREEN_WIDTH - wallSize
-                    && appleY >= wallSize && appleY < SCREEN_HEIGHT - wallSize) {
-                appleInWall = false;
+        for (int i = 0; i < 10; i++) {
+            appleInWall = true;
+            while (appleInWall) {
+                appleX = random.nextInt((int) (SCREEN_WIDTH / UNIT_SIZE - 2)) * UNIT_SIZE + UNIT_SIZE;
+                appleY = random.nextInt((int) (SCREEN_HEIGHT / UNIT_SIZE - 2)) * UNIT_SIZE + UNIT_SIZE;
+                apple = new Apple(appleX, appleY, UNIT_SIZE);
+                // Kiểm tra xem táo có trùng với vị trí của tường không
+                if (appleX >= wallSize && appleX < SCREEN_WIDTH - wallSize
+                        && appleY >= wallSize && appleY < SCREEN_HEIGHT - wallSize) {
+                    Point _apple = new Point(apple.getX(), apple.getY());
+                if (!apples.contains(_apple)) {
+                    apples.add(_apple);
+                    appleInWall = false;
+                }
+                }
             }
         }
     }
@@ -142,6 +172,7 @@ public final class GamePanel extends JPanel implements ActionListener {
                 }
             }
         }
+        moving = false;
     }
 
     public void registerKeyListener() {
@@ -152,10 +183,19 @@ public final class GamePanel extends JPanel implements ActionListener {
 
     //check ăn táo
     public void checkApple() {
-        if (X[0] == appleX && Y[0] == appleY) {
-            bodyParts++;
-            applesEaten++;
-            increaseSpeed();
+        Point head = new Point(X[0], Y[0]);
+        java.util.List<Point> eatenApples = new ArrayList<>();
+        for (Point apple : apples) {
+            if (head.equals(apple)) {
+                eatenApples.add(apple);
+                applesEaten++;
+                increaseSpeed();
+                increaseSnakeLength();
+            }
+        }
+        apples.removeAll(eatenApples);
+
+        if (apples.isEmpty()) {
             newApple();
         }
     }
@@ -204,39 +244,72 @@ public final class GamePanel extends JPanel implements ActionListener {
         }
     }
 
-    public void gameOver(Graphics g) {
+    public void gameOver(Graphics g) throws ParseException {
         g.setColor(Color.red);
         g.setFont(new Font("Ink Free", Font.BOLD, 70));
         FontMetrics metrics = getFontMetrics(getFont());
         g.drawString("Thua rùi :((", (SCREEN_WIDTH - metrics.stringWidth("Thua rùi")) / 3, SCREEN_HEIGHT / 2);
         g.drawString("Score: " + applesEaten, (SCREEN_WIDTH - metrics.stringWidth("Score: " + applesEaten)) / 3, g.getFont().getSize());
-        
+        PlayerManager.savePlayer(applesEaten);
         //restart
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free", Font.ITALIC, 30));
         FontMetrics metrics1 = getFontMetrics(getFont());
         g.drawString("Nhan SPACE de choi lai ", (SCREEN_WIDTH - metrics1.stringWidth("Nhan SPACE de choi lai")) -300, SCREEN_HEIGHT -100);
-        
+        resetSnake();
     }
-
+    
     @Override
     public void actionPerformed(ActionEvent e) {
         if (running) {
             move();
             checkApple();
             checkCollisions();
+            checkAppleDisappearance();
+        } else if (e.getSource() == timer && !running) {
+            if (resetFlag) {
+                resetSnake();
+                resetFlag = false;
+            }
         }
         repaint();
     }
-    
-        
+
+    private void resetSnake() {
+        X[0] = UNIT_SIZE;
+        Y[0] = UNIT_SIZE;
+        for (int i = 0; i < bodyParts; i++) {
+            X[i] = UNIT_SIZE;
+            Y[i] = UNIT_SIZE;
+        }
+    }
+
+    private void increaseSnakeLength() {
+        int lastIndex = bodyParts - 1;
+        int newX = X[lastIndex] - (X[lastIndex] - X[lastIndex - 1]);
+        int newY = Y[lastIndex] - (Y[lastIndex] - Y[lastIndex - 1]);
+
+        X[bodyParts] = newX;
+        Y[bodyParts] = newY;
+        bodyParts++;
+    }
+
+    private void checkAppleDisappearance() {
+        java.util.List<Point> applesToRemove = new ArrayList<>();
+        for (Point _apple : apples) {
+        if (System.currentTimeMillis() - _apple.getTime() >= 2000) {
+            applesToRemove.add(_apple);
+        }
+        }
+        apples.removeAll(applesToRemove);
+    }
 
     public class MyKeyAdapter extends KeyAdapter {
-
         @Override
         public void keyPressed(KeyEvent e) {
             if(e.getKeyCode()==KeyEvent.VK_SPACE){
                 if(running==false){
+                    apples.clear();
                     applesEaten=0;
                     bodyParts=3;
                     DELAY=160;
@@ -246,37 +319,72 @@ public final class GamePanel extends JPanel implements ActionListener {
                     timer.start();
                     X[0] = UNIT_SIZE;
                     Y[0] = UNIT_SIZE;
-                   
-                }
-                
-                   
-        }
-            
-            switch (e.getKeyCode()) {
-                case KeyEvent.VK_LEFT -> {
-                    if (direction != 'R') {
-                        direction = 'L';
+                }    
+            }
+            if (!moving) {
+                switch (e.getKeyCode()) {
+                    case KeyEvent.VK_LEFT -> {
+                        if (direction != 'R') {
+                            direction = 'L';
+                            moving = true; // Đánh dấu rắn đang di chuyển
+                        }
                     }
-                }
 
-                case KeyEvent.VK_RIGHT -> {
-                    if (direction != 'L') {
-                        direction = 'R';
+                    case KeyEvent.VK_RIGHT -> {
+                        if (direction != 'L') {
+                            direction = 'R';
+                            moving = true; // Đánh dấu rắn đang di chuyển
+                        }
                     }
-                }
 
-                case KeyEvent.VK_UP -> {
-                    if (direction != 'D') {
-                        direction = 'U';
+                    case KeyEvent.VK_UP -> {
+                        if (direction != 'D') {
+                            direction = 'U';
+                            moving = true; // Đánh dấu rắn đang di chuyển
+                        }
                     }
-                }
 
-                case KeyEvent.VK_DOWN -> {
-                    if (direction != 'U') {
-                        direction = 'D';
+                    case KeyEvent.VK_DOWN -> {
+                        if (direction != 'U') {
+                            direction = 'D';
+                            moving = true; // Đánh dấu rắn đang di chuyển
+                        }
                     }
                 }
             }
         }
+    }
+    
+    class Point {
+        int x;
+        int y;
+        long time;
+
+        Point(int x, int y) {
+                this.x = x;
+                this.y = y;
+                this.time = System.currentTimeMillis();
+            }
+
+            public long getTime() {
+                return time;
+            }
+
+            @Override
+            public boolean equals(Object obj) {
+                if (this == obj) {
+                    return true;
+                }
+                if (obj == null || getClass() != obj.getClass()) {
+                    return false;
+                }
+                Point point = (Point) obj;
+                return x == point.x && y == point.y;
+            }
+
+            @Override
+            public int hashCode() {
+                return Objects.hash(x, y);
+            }   
     }
 }
